@@ -26,7 +26,11 @@ while [ 0 -lt $# ]; do
 	  *) echo "Voce deve selecionar comp (complemental) ou dif (diferencial)"; exit 2;;
 	esac ;;
 	
+    -ls) cat "$(ls $dest/$src -l)";;
+	
     -inst) inst;;
+
+    -run) rsync -a --progress --relative --verbose $src/ $dest/;;
     
     *) echo "$1 nao e uma opcao valida."; echo "Digite g7bkp -help para mais informacoes"; exit 1;;
   esac
@@ -34,7 +38,7 @@ while [ 0 -lt $# ]; do
 done
 
 #mkdir -p $dest/
-rsync -a --progress --relative --verbose $src/ $dest/
+
 
 #rsync -auv --progress --delete --exclude='*' --log-file=$logfile $src/ $dest/ 
 #rsync -auv --backup-dir=DIR --progress --delete --exclude='.*' --log-file=$logfile $src/ $dest/ 
