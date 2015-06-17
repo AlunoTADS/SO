@@ -1,2 +1,40 @@
-#!/bin/sh
-echo "Hello!"
+#!/bin/bash
+
+inst(){
+  cp --preserve g7bkp /bin
+}
+
+logfile=.g7bkp.log
+src=$(pwd)
+dest=~/bkp
+
+
+while [ 0 -lt $# ]; do
+  case $1 in
+    
+    -bkp)  bkp=1;rest=0;;
+    -rest) rest=1;bkp=0;;
+    -sync) bkp=0;rest=0;;
+    
+    -dest) shift; dest="$1";;
+    -src) shift; src="$1";;
+    
+    -tp) 
+	case $2 in
+	  comp) tp="comp"; shift;;
+	  dif) tp="dif"; shift;;
+	  *) echo "Voce deve selecionar comp (complemental) ou dif (diferencial)"; exit 2;;
+	esac ;;
+	
+    -inst) inst;;
+    
+    *) echo "$1 nao e uma opcao valida."; echo "Digite g7bkp -help para mais informacoes"; exit 1;;
+  esac
+  shift
+done
+
+#mkdir -p $dest/
+rsync -a --progress --relative --verbose $src/ $dest/
+
+#rsync -auv --progress --delete --exclude='*' --log-file=$logfile $src/ $dest/ 
+#rsync -auv --backup-dir=DIR --progress --delete --exclude='.*' --log-file=$logfile $src/ $dest/ 
