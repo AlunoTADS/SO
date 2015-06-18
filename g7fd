@@ -1,0 +1,54 @@
+#!/bin/bash
+
+resultFileName=".result.tmp"
+
+askForUser(){
+	local opt
+	read -p "$1" opt
+	case $opt in
+		s) $2;;
+		n) echo ;;
+		*) echo 'Opcao desconhecida.' ; echo ; askForUser "$1" $2 ;;
+	esac
+}
+
+getName() {
+	read -p 'Entre com o nome do arquivo: ' fileName
+	echo "$fileName"
+}
+
+findFile(){
+	find . \( -regex "$1" -o -name "$1" \) -depth 2>/dev/null -fprint "$resultFileName" -print | wc -l
+}
+
+saveResult(){
+	cat "$resultFileName" >> "$(getName)"
+}
+
+askForSaveResult(){
+	askForUser 'Deseja salvar o resultado da pesquisa (s/n) ? ' saveResult
+}
+
+showResult(){
+	cat "$resultFileName" | more
+}
+
+askForShowResult(){
+	askForUser 'Deseja ver o resultado da busca (s/n) ? ' showResult
+}
+
+findResult(){
+	case $1 in
+		0) echo 'Nenhum arquivo encontrado.';;
+		1) echo "$1 Arquivo encontrado."; askForShowResult; askForSaveResult;;
+		*) echo "$1 arquivos encontrados."; askForShowResult; askForSaveResult;;
+	esac
+}
+
+
+main(){
+    clear
+	findResult $(findFile "$(getName)")
+	askForUser 'Deseja fazer mais uma pesquisa (s/n)? ' main
+}
+main
