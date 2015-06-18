@@ -1,0 +1,163 @@
+#!/bin/bash
+clear
+contx=0
+declare -a CANDIDATO
+declare tema
+
+#Inicia Votação - Rotina responsável por verificar o início da votação.
+iniciar_votac1() {
+	clear
+	local var1=0
+	echo "Iniciar Votação?"
+	echo "1 - Sim"
+	echo "2 - Não"
+	read var1
+	case $var1 in
+		1) echo ;;
+		2) echo ; exit 0;;
+		*) echo 'Essa opção não existe.' ; echo ; iniciar_votac1 ;;
+	esac
+}
+
+#Inserção de Candidatos - Rotina responsável pelo cadastro de candidatos e validação.
+name_cand2() {
+	clear
+	local cand=0
+	local extra='s'
+	echo "Digite o tema da sua votação:"
+		read tema
+	while [ "$extra" != 'n' ]; do
+		clear
+		echo "Insira o nome do candidato para cadastro:"
+		read cand	
+		while [ "$cand" == '' ]; do
+			clear
+			echo "Nome candidato inserido é inválido. "
+			echo "Insira o nome do candidato para cadastro:"
+			read cand
+		done	
+		contx=$(($contx + 1))
+		echo -e "$contx $cand" >> database_urna.txt	
+		echo "Deseja cadastrar mais candidatos?(s/n)"	
+		read extra
+		while [ "$extra" != 's' ] && [ "$extra" != 'n' ]; do
+			clear
+			echo "Deseja cadastrar mais candidatos?(s/n)"	
+			read extra
+		done
+	done
+}
+
+#Código Votar - Rotina responsável por permitir ao usuário votar no candidato desejado.
+votar_3() {
+	clear
+	local voto
+	echo "Iniciando votação. Carregando candidatos..."
+	echo
+	echo "--------------------"
+	echo "Lista de candidatos:"
+	cat database_urna.txt
+	echo "--------------------"
+	echo "Para encerrar digite *."
+	echo
+	echo "Digite o número do candidato desejado:"
+	read voto
+	clear
+	while [ "$voto" != "*" ]; do
+	 if [ $(cat database_urna.txt | awk '{print $1}' | grep "$voto" | wc -l) == 0 ]; then 
+		echo "Voto inválido. Vote em um candidato existente."
+		cat database_urna.txt
+         else
+		echo "$voto" >> database_votos.txt 
+		clear
+		echo "Voto contabilizado."
+		echo
+		echo "--------------------"
+		echo "Lista de candidatos:"
+		cat database_urna.txt
+		echo "--------------------"
+		echo "Para encerrar digite *."
+		echo
+		echo "Digite o número do candidato desejado:"
+	  fi
+	  read voto
+	done
+}
+
+#Mostra Votação - Rotina responsável por ler os dados da votação, processar, mostrar o resultado ao usuário, e salvar o resultado da votação.
+mostra_votac4() {
+	clear
+	local count
+	local totalv=$(cat database_votos.txt | sed '/^\s*$/d' | wc -l)
+	echo "O número total de voto(s) foi de: $totalv voto(s). =============== 100% ==============" >> database_resultado_votacao.txt
+	echo "O número total de voto(s) foi de: $totalv voto(s). =============== 100% =============="
+	IFS=$'\n'       
+	set -f          
+	for elegivel in `cat database_urna.txt` #for each de cada linda da database de candidatos da urna.
+	do
+		id="$(echo "${elegivel}" | awk '{print $1}')" #ID recebe somente a primeira coluna do arquivo (número do candidato)
+		nome="$(echo "${elegivel}" | awk '{print $2}')" #Nome recebe somente a segunda coluna do arquivo (nome do candidato)
+		count=$(grep $id "database_votos.txt" | wc -l) #Count recebe a contagem de cada ID.
+		perc=$(echo "scale = 2; $count * 100 / $totalv" | bc) #Perc recebe a porcentagem de votos de cada opção.
+		echo "O candidato $nome recebeu $count voto(s). Porcentagem: $perc%."
+		echo "O candidato $nome recebeu $count voto(s). Porcentagem: $perc%." >> database_resultado_votacao.txt
+	done
+	echo
+	echo "Deseja salvar e compactar a votação?(s/n)"
+		read var2
+	while [ "$var2" != 's' ] && [ "$var2" != 'n' ]; do
+		clear
+		echo "Deseja salvar e compactar a votação?(s/n)"	
+		read var2
+	done
+	case $var2 in
+		s) echo ;;
+		n) echo ; encerrar_6 ;;
+        esac
+}
+
+#Zip Votação - Rotina responsável por zipar os databases gerados durante a votação.
+zipa_votac5(){
+     echo
+     echo "Salvando e compactando os arquivos..."
+     zip votação_"$tema" database_resultado_votacao.txt database_urna.txt database_votos.txt
+}
+
+#Encerra Votação - Rotina responsável por encerrar a votação.
+encerrar_6() {
+	echo
+	echo "Votação encerrada."
+	echo "------------------"
+exit 0
+}
+
+#Árvore de Execução das rotinas.
+rm "database_resultado_votacao.txt"
+rm "database_urna.txt"
+rm "database_votos.txt"
+iniciar_votac1
+name_cand2
+votar_3
+mostra_votac4
+zipa_votac5
+encerrar_6
+
+#Código removido por causa de uma função... (otimização)
+
+#Código Processa Voto
+#processa_voto4() {
+#echo "Flag! - Processa Voto"
+#clear
+#	for((i=0;i<$REGISTRADOR;i++)); do
+#	REGISTRADOR=${#CANDIDATO[@]}
+#	echo "Quantidade de valores no array: $REGISTRADOR"
+#	 grep "${CANDIDATO[${i}]}" database_votos.txt | wc -l >> database_votos_contados.txt | echo -e "${CANDIDATO[${i}]}\t\c" >> database_votos_contados.txt
+#done	
+#}
+
+
+#	for((count=0;count<$REGISTRADOR;count++)); do
+#		cat database_votos.txt | awk -v n=${CANDIDATO[count]} -v cont=0 -v contg="$totalv" 'BEGIN {cont=0;} $1==n {cont++;} END { print "Número de voto(s) para "n" foi de:",cont,"voto(s). O percentual é de:",cont/contg*100,"%.";}' 
+#	echo
+#	done
+#exit 0
