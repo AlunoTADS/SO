@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Para baixar o Projeto digite
+# git clone https://github.com/AlunoTADS/SO.git
+
 ####################################
 #  Variaveis de Configuração
 # default. Podem ser modificadas 
@@ -25,10 +28,14 @@ run(){
   
   local opt="" # variavel utilizada para configurar a transferencia
 
+  ##########################################
   #  Se o usuario definir apenas um arquivo
-  if [ $arq != "" ]; then
+  if [ ! $arq = "" ]; then
     opt="$opt --exclude='*' --include='$arq'"
   fi
+
+  ###################################
+  # Configura o tipo da transferencia
   
   if [ $tp == "tot" ]; then
     #  Se o bacukp/restore for total então configura 
@@ -49,20 +56,23 @@ run(){
   fi
   
   
-
+	
+  #####################################
+  # Configura o fluxo da transferencia
+  
   if [ $act == "sync" ]; then
     #  Se for syncronização, roda o programa nos dois sentidos pegando
     # apenas os arquivos mais recentes e 
-    rsync -auv --progress --relative --verbose $src/ $dest/
-    rsync -auv --progress --relative --verbose $dest/ $src/
+    rsync -auv --relative $src/ $dest/
+    rsync -auv $dest/$src/ $src/
 
     
   #  Se for backup ou restore, roda apenas em um sentido e sobre escreve
   # mesmo se a data de criação for mais recente
   elif [ $act == "bkp" ]; then
-    rsync -av $opt --progress --relative $src/ $dest/
+    rsync -av $opt $src/ $dest/
   elif [ $act == "rest" ]; then
-    rsync -auv $delete --progress --relative $dest/ $src/
+    rsync -av $opt $dest/$src/ $src/
   fi
 }
 
@@ -81,30 +91,29 @@ while [ 0 -lt $# ]; do
     -file) shift; file="$1";;
     
     -tp) 
-	case $2 in
-	  comp) tp="comp"; shift;;
-	  dif) tp="dif"; shift;;
-	  tot) tp="tot"; shift;;
-	  *) echo "Voce deve selecionar comp (complemental), dif (diferencial) ou tot (total)"; exit 2;;
-	esac ;;
+		case $2 in
+		  comp) tp="comp"; shift;;
+		  dif) tp="dif"; shift;;
+		  tot) tp="tot"; shift;;
+		  *) echo "Voce deve selecionar comp (complemental), dif (diferencial) ou tot (total)"; exit 2;;
+		esac ;;
 	
     -rec) 
-	case $2 in
-	  s) rec="--recursive"; shift;;
-	  n) rec="--dirs"; shift;;
-	  *) echo "Erro, o parametro recursivo so aceita valores s (sim) ou n (nao)"; exit 3;;
-	esac ;;
+		case $2 in
+		  s) rec="--recursive"; shift;;
+		  n) rec="--dirs"; shift;;
+		  *) echo "Erro, o parametro recursivo so aceita valores s (sim) ou n (nao)"; exit 3;;
+		esac ;;
 
 	
     #  Executa as ações possíveis: instalar o programa, listar os arquivos da pasta de destino
     # executar a transferência.
-    -ls) cat "$(ls $dest/$src)";;
-	
-    -inst) inst;;
 
+    -ls) cat "$(ls $dest/$src)";;
+    -inst) inst;;
     -run) run;;
     
-    *) echo "$1 nao e uma opcao valida."; echo "Digite g7bkp -help para mais informacoes"; exit 1;;
+    *) echo "$1 nao e uma opcao valida."; exit 1;;
   esac
   shift
 done
